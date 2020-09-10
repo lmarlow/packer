@@ -185,6 +185,23 @@ builder.
     `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
     `raw`.
 
+- `serials` (array of objects) - Serial devices to create.
+  Example:
+
+  ```
+  [
+    {
+      "id": 0,
+      "device": "socket"
+    }
+  ]
+  ```
+
+  - `id` (int) - Required. 0-3 corresponding to `serial0`, `serial1`,
+    `serial2`, `serial3`.
+
+  - `device` (string) - Required. `socket` or `/dev/...`
+
 - `template_name` (string) - Name of the template. Defaults to the generated
   name used during creation.
 

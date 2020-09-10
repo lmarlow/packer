@@ -49,6 +49,7 @@ type Config struct {
 	VGA            vgaConfig    `mapstructure:"vga"`
 	NICs           []nicConfig  `mapstructure:"network_adapters"`
 	Disks          []diskConfig `mapstructure:"disks"`
+	Serials        []serialConfig `mapstructure:"serials"`
 	ISOFile        string       `mapstructure:"iso_file"`
 	ISOStoragePool string       `mapstructure:"iso_storage_pool"`
 	Agent          bool         `mapstructure:"qemu_agent"`
@@ -89,6 +90,10 @@ type diskConfig struct {
 type vgaConfig struct {
 	Type   string `mapstructure:"type"`
 	Memory int    `mapstructure:"memory"`
+}
+type serialConfig struct {
+	ID     int    `mapstructure:"id"`
+	Device string `mapstructure:"device"`
 }
 type storageConfig struct {
 	common.ISOConfig `mapstructure:",squash"`

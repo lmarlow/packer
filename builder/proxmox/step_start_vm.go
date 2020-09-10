@@ -47,6 +47,7 @@ func (s *stepStartVM) Run(ctx context.Context, state multistep.StateBag) multist
 		QemuSockets:  c.Sockets,
 		QemuOs:       c.OS,
 		QemuVga:      generateProxmoxVga(c.VGA),
+		QemuSerials:  generateProxmoxSerials(c.Serials),
 		QemuIso:      isoFile,
 		QemuNetworks: generateProxmoxNetworkAdapters(c.NICs),
 		QemuDisks:    generateProxmoxDisks(c.Disks),
@@ -153,6 +154,15 @@ func generateProxmoxVga(vga vgaConfig) proxmox.QemuDevice {
 		dev["memory"] = vga.Memory
 	}
 	return dev
+}
+func generateProxmoxSerials(serials []serialConfig) proxmox.QemuDevices {
+	devs := make(proxmox.QemuDevices)
+	for idx := range serials {
+		devs[idx] = make(proxmox.QemuDevice)
+		devs[idx]["id"] = serials[idx].ID
+		devs[idx]["type"] = serials[idx].Device
+	}
+	return devs
 }
 
 func setDeviceParamIfDefined(dev proxmox.QemuDevice, key, value string) {

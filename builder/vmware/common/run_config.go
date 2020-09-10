@@ -38,6 +38,8 @@ type RunConfig struct {
 	// true if building on ESXi 6.5 and 6.7 with VNC enabled. Defaults to
 	// false.
 	VNCDisablePassword bool `mapstructure:"vnc_disable_password" required:"false"`
+
+	VNCOverWebsocket bool `mapstructure:"vnc_over_websocket" required:"false"`
 }
 
 func (c *RunConfig) Prepare(_ *interpolate.Context, bootConfig *BootConfigWrapper) (errs []error) {

@@ -57,14 +57,14 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		VMName: b.config.VMName,
 		Ctx:    b.config.ctx,
 	}
-	if b.config.USBScanCode {
-		stepBootCommand = &vmwcommon.StepUSBBootCommand{
-			Config:      b.config.VNCConfig.BootConfig,
-			KeyInterval: b.config.VNCConfig.BootKeyInterval,
-			VMName:      b.config.VMName,
-			Ctx:         b.config.ctx,
-		}
-	}
+	//if b.config.USBScanCode {
+	//	stepBootCommand = &vmwcommon.StepUSBBootCommand{
+	//		Config:      b.config.VNCConfig.BootConfig,
+	//		KeyInterval: b.config.VNCConfig.BootKeyInterval,
+	//		VMName:      b.config.VMName,
+	//		Ctx:         b.config.ctx,
+	//	}
+	//}
 
 	steps := []multistep.Step{
 		&vmwcommon.StepPrepareTools{
@@ -135,13 +135,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			HTTPPortMax: b.config.HTTPPortMax,
 			HTTPAddress: b.config.HTTPAddress,
 		},
-		&vmwcommon.StepConfigureVNC{
-			Enabled:            !b.config.DisableVNC,
-			VNCBindAddress:     b.config.VNCBindAddress,
-			VNCPortMin:         b.config.VNCPortMin,
-			VNCPortMax:         b.config.VNCPortMax,
-			VNCDisablePassword: b.config.VNCDisablePassword,
-		},
 		&vmwcommon.StepRegister{
 			Format:         b.config.Format,
 			KeepRegistered: b.config.KeepRegistered,
@@ -150,6 +143,15 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		&vmwcommon.StepRun{
 			DurationBeforeStop: 5 * time.Second,
 			Headless:           b.config.Headless,
+		},
+		&vmwcommon.StepConfigureVNC{
+			Enabled:            !b.config.DisableVNC,
+			VNCBindAddress:     b.config.VNCBindAddress,
+			VNCPortMin:         b.config.VNCPortMin,
+			VNCPortMax:         b.config.VNCPortMax,
+			VNCDisablePassword: b.config.VNCDisablePassword,
+			VNCOverWebsocket:   b.config.VNCOverWebsocket,
+			DriverConfig:       &b.config.DriverConfig,
 		},
 		stepBootCommand,
 		&communicator.StepConnect{

@@ -44,9 +44,6 @@ func (s *StepVNCBootCommand) Run(ctx context.Context, state multistep.StateBag) 
 	debug := state.Get("debug").(bool)
 	httpPort := state.Get("http_port").(int)
 	ui := state.Get("ui").(packer.Ui)
-	vncIp := state.Get("vnc_ip").(string)
-	vncPort := state.Get("vnc_port").(int)
-	vncPassword := state.Get("vnc_password")
 
 	// Wait the for the vm to boot.
 	if int64(s.Config.BootWait) > 0 {
@@ -58,42 +55,53 @@ func (s *StepVNCBootCommand) Run(ctx context.Context, state multistep.StateBag) 
 			return multistep.ActionHalt
 		}
 	}
-
 	var pauseFn multistep.DebugPauseFn
 	if debug {
 		pauseFn = state.Get("pauseFn").(multistep.DebugPauseFn)
 	}
 
-	// Connect to VNC
-	ui.Say(fmt.Sprintf("Connecting to VM via VNC (%s:%d)", vncIp, vncPort))
-
-	nc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", vncIp, vncPort))
-	if err != nil {
-		err := fmt.Errorf("Error connecting to VNC: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-	defer nc.Close()
-
-	var auth []vnc.ClientAuth
-
-	if vncPassword != nil && len(vncPassword.(string)) > 0 {
-		auth = []vnc.ClientAuth{&vnc.PasswordAuth{Password: vncPassword.(string)}}
+	var c bootcommand.VNCKeyEvent
+	conn, ok := state.GetOk("vnc_conn")
+	if ok {
+		conn := conn.(*ConnWrapper)
+		defer conn.Close()
+		c = conn
 	} else {
-		auth = []vnc.ClientAuth{new(vnc.ClientAuthNone)}
-	}
+		vncIp := state.Get("vnc_ip").(string)
+		vncPort := state.Get("vnc_port").(int)
+		vncPassword := state.Get("vnc_password")
 
-	c, err := vnc.Client(nc, &vnc.ClientConfig{Auth: auth, Exclusive: true})
-	if err != nil {
-		err := fmt.Errorf("Error handshaking with VNC: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-	defer c.Close()
+		// Connect to VNC
+		ui.Say(fmt.Sprintf("Connecting to VM via VNC (%s:%d)", vncIp, vncPort))
 
-	log.Printf("Connected to VNC desktop: %s", c.DesktopName)
+		nc, err := net.Dial("tcp", fmt.Sprintf("%s:%d", vncIp, vncPort))
+		if err != nil {
+			err := fmt.Errorf("Error connecting to VNC: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+		defer nc.Close()
+
+		var auth []vnc.ClientAuth
+
+		if vncPassword != nil && len(vncPassword.(string)) > 0 {
+			auth = []vnc.ClientAuth{&vnc.PasswordAuth{Password: vncPassword.(string)}}
+		} else {
+			auth = []vnc.ClientAuth{new(vnc.ClientAuthNone)}
+		}
+
+		conn, err := vnc.Client(nc, &vnc.ClientConfig{Auth: auth, Exclusive: true})
+		if err != nil {
+			err := fmt.Errorf("Error handshaking with VNC: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+		defer conn.Close()
+		log.Printf("Connected to VNC desktop: %s", conn.DesktopName)
+		c = conn
+	}
 
 	hostIP := state.Get("http_ip").(string)
 	s.Ctx.Data = &VNCBootCommandTemplateData{

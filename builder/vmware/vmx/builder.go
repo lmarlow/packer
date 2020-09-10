@@ -130,6 +130,8 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			VNCPortMin:         b.config.VNCPortMin,
 			VNCPortMax:         b.config.VNCPortMax,
 			VNCDisablePassword: b.config.VNCDisablePassword,
+			VNCOverWebsocket:   b.config.VNCOverWebsocket,
+			DriverConfig:       &b.config.DriverConfig,
 		},
 		&vmwcommon.StepRegister{
 			Format:         b.config.Format,
